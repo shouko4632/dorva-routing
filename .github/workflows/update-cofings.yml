@@ -32,14 +32,18 @@ jobs:
           
           echo '<!DOCTYPE html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>DorvaVPN</title><body style="font-family:sans-serif;padding:20px;max-width:400px;margin:0 auto;"><h2>Профили DorvaVPN</h2><div style="display:flex;flex-direction:column;gap:15px;">' > index.html
           
-          for f in HAPP/*.JSON; do
+          shopt -s nullglob nocaseglob
+          files=(HAPP/*.json)
+          [ "${#files[@]}" -gt 0 ] || { echo "JSON-профили не найдены в HAPP"; exit 1; }
+
+          for f in "${files[@]}"; do
             jq --arg ip "$IP_URL" --arg site "$SITE_URL" --arg ts "$NOW" \
                '.Geoipurl=$ip | .Geositeurl=$site | .LastUpdated=$ts' \
                "$f" > "$f.tmp" && mv "$f.tmp" "$f"
-            
+
             LINK="happ://routing/onadd/$(base64 -w0 "$f")"
-            printf '%s' "$LINK" > "${f%.JSON}.DEEPLINK"
-            
+            printf '%s' "$LINK" > "${f%.*}.DEEPLINK"
+
             NAME=$(jq -r '.Name' "$f")
             echo "<a href=\"$LINK\" style=\"padding:15px;background:#0969da;color:#fff;text-decoration:none;border-radius:6px;text-align:center;font-weight:bold;\">Установить $NAME</a>" >> index.html
           done
