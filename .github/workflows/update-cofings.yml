@@ -1,0 +1,56 @@
+name: update-configs
+
+on:
+  schedule:
+    - cron: "27 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve roscomvpn geo tags
+        id: geo
+        run: |
+          tag() { git ls-remote --tags "$1" | grep -oE 'refs/tags/[0-9]{12}' | grep -oE '[0-9]{12}' | sort -rn | head -1; }
+          IP=$(tag https://github.com/hydraponique/roscomvpn-geoip.git)
+          SITE=$(tag https://github.com/hydraponique/roscomvpn-geosite.git)
+          [ -n "$IP" ] && [ -n "$SITE" ] || { echo "теги не найдены"; exit 1; }
+          echo "ip=$IP"     >> "$GITHUB_OUTPUT"
+          echo "site=$SITE" >> "$GITHUB_OUTPUT"
+
+      - name: Rebuild profiles + deeplinks + HTML
+        run: |
+          IP_URL="https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@${{ steps.geo.outputs.ip }}/release/geoip.dat"
+          SITE_URL="https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geosite@${{ steps.geo.outputs.site }}/release/geosite.dat"
+          NOW=$(date -u +%s)
+          
+          echo '<!DOCTYPE html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>DorvaVPN</title><body style="font-family:sans-serif;padding:20px;max-width:400px;margin:0 auto;"><h2>Профили DorvaVPN</h2><div style="display:flex;flex-direction:column;gap:15px;">' > index.html
+          
+          for f in HAPP/*.JSON; do
+            jq --arg ip "$IP_URL" --arg site "$SITE_URL" --arg ts "$NOW" \
+               '.Geoipurl=$ip | .Geositeurl=$site | .LastUpdated=$ts' \
+               "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+            
+            LINK="happ://routing/onadd/$(base64 -w0 "$f")"
+            printf '%s' "$LINK" > "${f%.JSON}.DEEPLINK"
+            
+            NAME=$(jq -r '.Name' "$f")
+            echo "<a href=\"$LINK\" style=\"padding:15px;background:#0969da;color:#fff;text-decoration:none;border-radius:6px;text-align:center;font-weight:bold;\">Установить $NAME</a>" >> index.html
+          done
+          
+          echo '</div></body>' >> index.html
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add HAPP/ index.html
+          git diff --cached --quiet && { echo "нет изменений"; exit 0; }
+          git commit -m "update $(date -u +%Y%m%d%H%M)"
+          git push
