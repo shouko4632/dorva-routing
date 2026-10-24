@@ -5,17 +5,18 @@
   "RemoteDns": "8.8.8.8",
   "DomesticDns": "77.88.8.8",
   "RemoteDNSType": "DoH",
-  "RemoteDNSDomain": "https://8.8.8.8/dns-query",
+  "RemoteDNSDomain": "https://dns.google/dns-query",
   "RemoteDNSIP": "8.8.8.8",
   "DomesticDNSType": "DoH",
-  "DomesticDNSDomain": "https://77.88.8.8/dns-query",
+  "DomesticDNSDomain": "https://common.dot.dns.yandex.net/dns-query",
   "DomesticDNSIP": "77.88.8.8",
   "Geoipurl": "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202610240803/release/geoip.dat",
   "Geositeurl": "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geosite@202610120948/release/geosite.dat",
   "LastUpdated": "1792858160",
   "DnsHosts": {
     "lkfl2.nalog.ru": "213.24.64.175",
-    "lknpd.nalog.ru": "213.24.64.181"
+    "lknpd.nalog.ru": "213.24.64.181",
+    "ipv6.msftconnecttest.com": "127.0.0.1"
   },
   "RouteOrder": "block-proxy-direct",
   "DirectSites": [
@@ -24,17 +25,14 @@
     "geosite:whitelist",
     "geosite:microsoft",
     "geosite:apple",
-    "geosite:epicgames",
-    "geosite:riot",
-    "geosite:escapefromtarkov",
-    "geosite:steam",
-    "geosite:twitch",
-    "geosite:pinterest",
-    "geosite:faceit"
+    "regexp:\\.ru$",
+    "regexp:\\.su$",
+    "regexp:\\.xn--p1ai$"
   ],
   "DirectIp": [
     "geoip:private",
-    "geoip:direct"
+    "geoip:direct",
+    "geoip:ru"
   ],
   "ProxySites": [
     "geosite:google-play",
@@ -47,9 +45,19 @@
   "BlockSites": [
     "geosite:win-spy",
     "geosite:torrent",
-    "geosite:category-ads"
+    "geosite:category-ads",
+    "domain:luxcdn.ru",
+    "domain:adriver.ru",
+    "domain:m.mradx.net",
+    "domain:r.mradx.net"
   ],
-  "BlockIp": [],
+  "BlockIp": [
+    "155.212.203.195",
+    "195.209.109.60",
+    "92.38.252.75",
+    "92.38.252.74",
+    "95.163.52.80"
+  ],
   "DomainStrategy": "IPIfNonMatch",
   "FakeDNS": "false"
 }
